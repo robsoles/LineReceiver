@@ -1,3 +1,8 @@
+#ifndef LINERECEIVER_H
+#define LINERECEIVER_H
+
+#include <Arduino.h>
+
 class LineReceiver
 {
   public:
@@ -62,7 +67,7 @@ class LineReceiver
     {
       return size() - length() - 1;
     }
-    
+
     ~LineReceiver()
     {
       free(buf_);
@@ -93,3 +98,5 @@ class LineReceiver
     char* p_;
     size_t size_;
 };
+
+#endif // LINERECEIVER_H
