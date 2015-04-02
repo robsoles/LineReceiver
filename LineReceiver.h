@@ -26,10 +26,12 @@ class LineReceiver
         if (p_ < &buf_[size_-1])
         {
           *p_ = c;
-          p_++;
+          if(++p_>&buf_[size_-2]) flags|=1; // set the overflow flag now because next char in throws it anyway.
         }
         else
-        { // overflow: discard, reset line MAYBE ADD AN OVERFLOW FLAG?
+        { // 
+          flags|=1; // set the overflowed flag again - pedantic perhaps?
+          if(eventOverflow_!=nullptr) eventOverflow_(buf_); // give them a look if they have set overflowCallback(...);
           reset();
           terminate();
         }
@@ -67,6 +69,19 @@ class LineReceiver
     {
       return size() - length() - 1;
     }
+	
+    void overflowCallback(callback_t eventOverflow)
+    {
+      eventOverflow_=eventOverflow;
+    }
+
+    bool overflowed(void)
+    {
+      if(!flags&1) return false;
+      flags&=~1; // clear the flag.
+      return true; // maybe an alternative callback can be offered for overflow event?
+    }
+
 
     ~LineReceiver()
     {
@@ -86,6 +101,7 @@ class LineReceiver
     void reset() // could also be public
     {
       p_ = buf_;
+      if(flags&1) flags&=~1; // clear the overflowed flag.
     }
 
     void terminate()
@@ -93,10 +109,13 @@ class LineReceiver
       *p_ = 0;
     }
 
-    callback_t callback_;
+    callback_t callback_, eventOverflow_;
     char* buf_;
     char* p_;
     size_t size_;
+    uint8_t flags;
 };
 
+
 #endif // LINERECEIVER_H
+
